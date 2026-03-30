@@ -2,21 +2,28 @@
 import { useState } from "react";
 
 export default function Home() {
-  // BUSINESS INFO
+
+  // BUSINESS (GLOBAL)
   const [companyName, setCompanyName] = useState("");
   const [repName, setRepName] = useState("");
   const [services, setServices] = useState("");
 
-  // RECEPTIONIST CHAT
-  const [customerName, setCustomerName] = useState("");
+  // RECEPTIONIST (CHAT)
+  const [customerNameInquiry, setCustomerNameInquiry] = useState("");
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState([]);
 
-  // FOLLOW-UP
+  // FOLLOW UP (SEPARATE)
+  const [customerNameFollow, setCustomerNameFollow] = useState("");
   const [followMessage, setFollowMessage] = useState("");
   const [followResponse, setFollowResponse] = useState("");
 
+  // ========================
+  // RECEPTIONIST CHAT
+  // ========================
   const sendMessage = async () => {
+    if (!message) return;
+
     const newHistory = [
       ...chat,
       { role: "user", content: message }
@@ -32,7 +39,7 @@ export default function Home() {
         businessName: companyName,
         services,
         repName,
-        customerName
+        customerName: customerNameInquiry
       }),
     });
 
@@ -43,10 +50,15 @@ export default function Home() {
       { role: "assistant", content: data.reply }
     ]);
 
-    setMessage("");
+    setMessage(""); // clear input
   };
 
+  // ========================
+  // FOLLOW UP
+  // ========================
   const generateFollowUp = async () => {
+    if (!followMessage) return;
+
     const res = await fetch("/api/generate", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
@@ -56,46 +68,79 @@ export default function Home() {
         businessName: companyName,
         services,
         repName,
-        customerName
+        customerName: customerNameFollow
       }),
     });
 
     const data = await res.json();
+
     setFollowResponse(data.reply);
+    setFollowMessage(""); // clear after
   };
 
   return (
     <div style={container}>
 
-      <h1>AI Business Communication Assistant</h1>
+      <h1 style={{marginBottom: "20px"}}>
+        AI Business Communication Assistant
+      </h1>
 
       {/* BUSINESS SETUP */}
       <div style={card}>
         <h3>Business Setup</h3>
-        <input placeholder="Company Name" value={companyName} onChange={(e)=>setCompanyName(e.target.value)} style={input}/>
-        <input placeholder="Rep Name" value={repName} onChange={(e)=>setRepName(e.target.value)} style={input}/>
-        <input placeholder="Services" value={services} onChange={(e)=>setServices(e.target.value)} style={input}/>
+
+        <input
+          placeholder="Company Name"
+          value={companyName}
+          onChange={(e)=>setCompanyName(e.target.value)}
+          style={input}
+        />
+
+        <input
+          placeholder="Rep Name"
+          value={repName}
+          onChange={(e)=>setRepName(e.target.value)}
+          style={input}
+        />
+
+        <input
+          placeholder="Services"
+          value={services}
+          onChange={(e)=>setServices(e.target.value)}
+          style={input}
+        />
       </div>
 
+      {/* GRID */}
       <div style={grid}>
 
-        {/* RECEPTIONIST CHAT */}
+        {/* ================= RECEPTIONIST ================= */}
         <div style={card}>
           <h2>Customer Inquiry (AI Receptionist)</h2>
 
           <input
             placeholder="Customer Name"
-            value={customerName}
-            onChange={(e)=>setCustomerName(e.target.value)}
+            value={customerNameInquiry}
+            onChange={(e)=>setCustomerNameInquiry(e.target.value)}
             style={input}
           />
 
           <div style={chatBox}>
             {chat.map((msg, i) => (
               <div key={i} style={{
-                textAlign: msg.role === "user" ? "right" : "left"
+                display: "flex",
+                justifyContent: msg.role === "user" ? "flex-end" : "flex-start"
               }}>
-                <p><strong>{msg.role === "user" ? "You" : "AI"}:</strong> {msg.content}</p>
+                <div style={{
+                  background: msg.role === "user" ? "#7c3aed" : "#e2e8f0",
+                  color: msg.role === "user" ? "white" : "black",
+                  padding: "10px 14px",
+                  borderRadius: "16px",
+                  margin: "5px",
+                  maxWidth: "70%"
+                }}>
+                  {msg.content}
+                </div>
               </div>
             ))}
           </div>
@@ -108,13 +153,20 @@ export default function Home() {
           />
 
           <button onClick={sendMessage} style={button}>
-            Send
+            Send Message
           </button>
         </div>
 
-        {/* FOLLOW-UP */}
+        {/* ================= FOLLOW-UP ================= */}
         <div style={card}>
           <h2>Lead Follow-Up</h2>
+
+          <input
+            placeholder="Customer Name"
+            value={customerNameFollow}
+            onChange={(e)=>setCustomerNameFollow(e.target.value)}
+            style={input}
+          />
 
           <textarea
             placeholder="Last conversation..."
@@ -137,13 +189,14 @@ export default function Home() {
   );
 }
 
-// STYLES
+// ================= STYLES =================
+
 const container = {
-  background: "#0f172a",
+  background: "#E6E6FA", // lavender
   minHeight: "100vh",
   padding: "30px",
-  color: "white",
-  fontFamily: "Arial"
+  fontFamily: "Arial",
+  color: "#1e293b"
 };
 
 const grid = {
@@ -153,48 +206,52 @@ const grid = {
 };
 
 const card = {
-  background: "#1e293b",
+  background: "white",
   padding: "20px",
-  borderRadius: "10px"
+  borderRadius: "16px",
+  boxShadow: "0 4px 20px rgba(0,0,0,0.1)"
 };
 
 const input = {
   width: "100%",
   padding: "10px",
   marginTop: "10px",
-  borderRadius: "6px",
-  border: "none"
+  borderRadius: "8px",
+  border: "1px solid #ddd"
 };
 
 const textarea = {
   width: "100%",
   padding: "10px",
   marginTop: "10px",
-  borderRadius: "6px",
+  borderRadius: "8px",
+  border: "1px solid #ddd",
   minHeight: "80px"
 };
 
 const button = {
   marginTop: "10px",
-  padding: "10px",
-  background: "#3b82f6",
+  padding: "12px",
+  background: "#7c3aed",
   color: "white",
   border: "none",
-  borderRadius: "6px"
+  borderRadius: "10px",
+  cursor: "pointer",
+  fontWeight: "bold"
 };
 
 const chatBox = {
-  background: "#020617",
+  background: "#f8fafc",
   padding: "10px",
   marginTop: "10px",
   height: "200px",
   overflowY: "auto",
-  borderRadius: "6px"
+  borderRadius: "10px"
 };
 
 const output = {
   marginTop: "10px",
   padding: "10px",
-  background: "#020617",
-  borderRadius: "6px"
+  background: "#f1f5f9",
+  borderRadius: "10px"
 };
