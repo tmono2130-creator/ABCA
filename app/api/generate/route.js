@@ -1,11 +1,12 @@
 import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 export async function POST(req) {
   try {
+    // ✅ MOVE IT HERE (inside function)
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
     const {
       type,
       message,
@@ -25,9 +26,8 @@ You are an AI receptionist for ${businessName}.
 Representative: ${repName}
 Services: ${services}
 
-Speak to the customer (${customerName}) in a professional, friendly tone.
-Help them book, ask questions, or move forward.
-Keep responses concise.
+Speak to ${customerName} in a friendly and professional way.
+Help them move toward booking or next steps.
 `;
     }
 
@@ -38,8 +38,7 @@ You are following up with a lead for ${businessName}.
 Representative: ${repName}
 Customer: ${customerName}
 
-Write a friendly, natural follow-up that encourages a reply or booking.
-Do not sound robotic or pushy.
+Write a natural, friendly follow-up message.
 `;
     }
 
