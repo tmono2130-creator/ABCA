@@ -3,43 +3,42 @@ import { useState } from "react";
 
 export default function Home() {
 
-  // BUSINESS (GLOBAL)
-  const [companyName, setCompanyName] = useState("");
-  const [repName, setRepName] = useState("");
-  const [services, setServices] = useState("");
-
-  // RECEPTIONIST (CHAT)
-  const [customerNameInquiry, setCustomerNameInquiry] = useState("");
+  // =========================
+  // CUSTOMER INQUIRY (SEPARATE)
+  // =========================
+  const [inquiryName, setInquiryName] = useState("");
+  const [inquiryBusiness, setInquiryBusiness] = useState("");
+  const [inquiryServices, setInquiryServices] = useState("");
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState([]);
 
-  // FOLLOW UP (SEPARATE)
-  const [customerNameFollow, setCustomerNameFollow] = useState("");
+  // =========================
+  // LEAD FOLLOW-UP (SEPARATE)
+  // =========================
+  const [followRep, setFollowRep] = useState("");
+  const [followCustomer, setFollowCustomer] = useState("");
   const [followMessage, setFollowMessage] = useState("");
   const [followResponse, setFollowResponse] = useState("");
 
-  // ========================
+  // =========================
   // RECEPTIONIST CHAT
-  // ========================
+  // =========================
   const sendMessage = async () => {
     if (!message) return;
 
-    const newHistory = [
-      ...chat,
-      { role: "user", content: message }
-    ];
+    const newHistory = [...chat, { role: "user", content: message }];
 
     const res = await fetch("/api/generate", {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         type: "receptionist",
         message,
         history: chat,
-        businessName: companyName,
-        services,
-        repName,
-        customerName: customerNameInquiry
+        businessName: inquiryBusiness,
+        services: inquiryServices,
+        repName: followRep,
+        customerName: inquiryName
       }),
     });
 
@@ -50,81 +49,66 @@ export default function Home() {
       { role: "assistant", content: data.reply }
     ]);
 
-    setMessage(""); // clear input
+    setMessage("");
   };
 
-  // ========================
-  // FOLLOW UP
-  // ========================
+  // =========================
+  // FOLLOW-UP GENERATOR
+  // =========================
   const generateFollowUp = async () => {
     if (!followMessage) return;
 
     const res = await fetch("/api/generate", {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         type: "followup",
         message: followMessage,
-        businessName: companyName,
-        services,
-        repName,
-        customerName: customerNameFollow
+        repName: followRep,
+        customerName: followCustomer
       }),
     });
 
     const data = await res.json();
-
     setFollowResponse(data.reply);
-    setFollowMessage(""); // clear after
+    setFollowMessage("");
   };
 
   return (
     <div style={container}>
 
-      <h1 style={{marginBottom: "20px"}}>
+      <h1 style={{ marginBottom: "25px" }}>
         AI Business Communication Assistant
       </h1>
 
-      {/* BUSINESS SETUP */}
-      <div style={card}>
-        <h3>Business Setup</h3>
-
-        <input
-          placeholder="Company Name"
-          value={companyName}
-          onChange={(e)=>setCompanyName(e.target.value)}
-          style={input}
-        />
-
-        <input
-          placeholder="Rep Name"
-          value={repName}
-          onChange={(e)=>setRepName(e.target.value)}
-          style={input}
-        />
-
-        <input
-          placeholder="Services"
-          value={services}
-          onChange={(e)=>setServices(e.target.value)}
-          style={input}
-        />
-      </div>
-
-      {/* GRID */}
       <div style={grid}>
 
-        {/* ================= RECEPTIONIST ================= */}
+        {/* ================= CUSTOMER INQUIRY ================= */}
         <div style={card}>
           <h2>Customer Inquiry (AI Receptionist)</h2>
 
           <input
             placeholder="Customer Name"
-            value={customerNameInquiry}
-            onChange={(e)=>setCustomerNameInquiry(e.target.value)}
+            value={inquiryName}
+            onChange={(e) => setInquiryName(e.target.value)}
             style={input}
           />
 
+          <input
+            placeholder="Business Name"
+            value={inquiryBusiness}
+            onChange={(e) => setInquiryBusiness(e.target.value)}
+            style={input}
+          />
+
+          <input
+            placeholder="Services"
+            value={inquiryServices}
+            onChange={(e) => setInquiryServices(e.target.value)}
+            style={input}
+          />
+
+          {/* CHAT */}
           <div style={chatBox}>
             {chat.map((msg, i) => (
               <div key={i} style={{
@@ -146,9 +130,9 @@ export default function Home() {
           </div>
 
           <textarea
-            placeholder="Type message..."
+            placeholder="Type customer message..."
             value={message}
-            onChange={(e)=>setMessage(e.target.value)}
+            onChange={(e) => setMessage(e.target.value)}
             style={textarea}
           />
 
@@ -157,21 +141,28 @@ export default function Home() {
           </button>
         </div>
 
-        {/* ================= FOLLOW-UP ================= */}
+        {/* ================= LEAD FOLLOW-UP ================= */}
         <div style={card}>
           <h2>Lead Follow-Up</h2>
 
           <input
-            placeholder="Customer Name"
-            value={customerNameFollow}
-            onChange={(e)=>setCustomerNameFollow(e.target.value)}
+            placeholder="Rep Name"
+            value={followRep}
+            onChange={(e) => setFollowRep(e.target.value)}
+            style={input}
+          />
+
+          <input
+            placeholder="Lead Name"
+            value={followCustomer}
+            onChange={(e) => setFollowCustomer(e.target.value)}
             style={input}
           />
 
           <textarea
-            placeholder="Last conversation..."
+            placeholder="Last interaction with lead..."
             value={followMessage}
-            onChange={(e)=>setFollowMessage(e.target.value)}
+            onChange={(e) => setFollowMessage(e.target.value)}
             style={textarea}
           />
 
@@ -192,11 +183,11 @@ export default function Home() {
 // ================= STYLES =================
 
 const container = {
-  background: "#E6E6FA", // lavender
+  background: "#0f172a", // dark professional
   minHeight: "100vh",
   padding: "30px",
   fontFamily: "Arial",
-  color: "#1e293b"
+  color: "white"
 };
 
 const grid = {
@@ -209,7 +200,8 @@ const card = {
   background: "white",
   padding: "20px",
   borderRadius: "16px",
-  boxShadow: "0 4px 20px rgba(0,0,0,0.1)"
+  color: "#1e293b",
+  boxShadow: "0 4px 20px rgba(0,0,0,0.2)"
 };
 
 const input = {
