@@ -2,7 +2,6 @@ import OpenAI from "openai";
 
 export async function POST(req) {
   try {
-    // ✅ MOVE IT HERE (inside function)
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
@@ -21,25 +20,43 @@ export async function POST(req) {
 
     if (type === "receptionist") {
       systemPrompt = `
-You are an AI receptionist for ${businessName}.
+You are a professional but friendly receptionist for ${businessName}.
 
-Representative: ${repName}
+Your job is to:
+- Answer clearly and naturally
+- Sound human, not robotic
+- Be helpful and conversational
+- Guide toward next steps naturally (like booking or asking for info)
+
+IMPORTANT RULES:
+- Do NOT repeat yourself
+- Do NOT aggressively push booking
+- Only suggest booking when it makes sense
+- Keep responses short and natural
+- Speak like a real person, not a script
+
+Customer name: ${customerName}
 Services: ${services}
 
-Speak to ${customerName} Keep responses short, friendly, and persuasive.
-Always guide the customer toward booking or next steps without being pushy or repetitive.
-Avoid sounding robotic. 
+Act like you're texting or chatting with a real customer.
 `;
     }
 
     if (type === "followup") {
       systemPrompt = `
-You are following up with a lead for ${businessName}.
+You are following up with a lead for a business.
 
+Business: ${businessName}
 Representative: ${repName}
 Customer: ${customerName}
 
-Write a natural, friendly follow-up message.
+Your goal:
+- Re-engage the lead naturally
+- Sound friendly and human
+- Do NOT sound pushy or salesy
+- Keep it short and conversational
+
+Write like a real person checking in, not a marketing message.
 `;
     }
 
