@@ -27,7 +27,7 @@ Representative: ${repName}
 Services: ${services}
 
 Speak to ${customerName} Keep responses short, friendly, and persuasive.
-Always guide the customer toward booking or next steps.
+Always guide the customer toward booking or next steps without being pushy or repetitive.
 Avoid sounding robotic. 
 `;
     }
