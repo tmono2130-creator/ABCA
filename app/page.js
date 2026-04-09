@@ -1,6 +1,10 @@
 "use client";
-import { useState } from "react";
 
+// ================= IMPORTS =================
+import { useState, useEffect } from "react";
+import { supabase } from "../lib/supabase";
+
+// ================= COMPONENT =================
 export default function Home() {
 
   // ================= INQUIRY =================
@@ -19,6 +23,24 @@ export default function Home() {
   // ================= SAVED LEADS =================
   const [savedLeads, setSavedLeads] = useState([]);
 
+  // ================= LOAD LEADS FROM DATABASE =================
+  useEffect(() => {
+    fetchLeads();
+  }, []);
+
+  const fetchLeads = async () => {
+    const { data, error } = await supabase
+      .from("leads")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching leads:", error);
+    } else {
+      setSavedLeads(data);
+    }
+  };
+
   // ================= SEND MESSAGE =================
   const sendMessage = async () => {
     if (!message) return;
@@ -27,7 +49,7 @@ export default function Home() {
 
     const res = await fetch("/api/generate", {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         type: "receptionist",
         message,
@@ -54,7 +76,7 @@ export default function Home() {
 
     const res = await fetch("/api/generate", {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         type: "followup",
         message: followMessage,
@@ -67,14 +89,20 @@ export default function Home() {
 
     setFollowResponse(data.reply);
 
-    // SAVE LEAD
-    setSavedLeads([
-      ...savedLeads,
+    // 🔥 SAVE TO DATABASE
+    const { error } = await supabase.from("leads").insert([
       {
         name: followCustomer,
+        message: followMessage,
         response: data.reply
       }
     ]);
+
+    if (error) {
+      console.error("Error saving lead:", error);
+    } else {
+      fetchLeads(); // refresh list
+    }
 
     setFollowMessage("");
   };
@@ -86,7 +114,7 @@ export default function Home() {
 
       <div style={grid}>
 
-        {/* ================= INQUIRY ================= */}
+        {/* ================= CUSTOMER INQUIRY ================= */}
         <div style={card}>
           <h2>Customer Inquiry</h2>
 
@@ -126,6 +154,7 @@ export default function Home() {
 
           <input placeholder="Rep Name" value={followRep} onChange={(e)=>setFollowRep(e.target.value)} style={input}/>
           <input placeholder="Lead Name" value={followCustomer} onChange={(e)=>setFollowCustomer(e.target.value)} style={input}/>
+
           <textarea placeholder="Last interaction..." value={followMessage} onChange={(e)=>setFollowMessage(e.target.value)} style={textarea}/>
 
           <button onClick={generateFollowUp} style={button}>Generate Follow-Up</button>
@@ -141,12 +170,16 @@ export default function Home() {
       <div style={card}>
         <h2>Saved Leads</h2>
 
-        {savedLeads.map((lead, i) => (
-          <div key={i} style={leadCard}>
-            <strong>{lead.name}</strong>
-            <p>{lead.response}</p>
-          </div>
-        ))}
+        {savedLeads.length === 0 ? (
+          <p>No leads yet</p>
+        ) : (
+          savedLeads.map((lead, i) => (
+            <div key={i} style={leadCard}>
+              <strong>{lead.name}</strong>
+              <p>{lead.response}</p>
+            </div>
+          ))
+        )}
       </div>
 
     </div>
