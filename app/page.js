@@ -147,7 +147,7 @@ export default function Home() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        to: "+17027014908", // 👈 your phone for testing
+        to: "+17027014908", // nom 
         message: followResponse,
       }),
     });
