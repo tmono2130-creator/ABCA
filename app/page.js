@@ -1,10 +1,8 @@
 "use client";
 
-// ================= IMPORTS =================
-import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import { useState } from "react";
 
-// ================= COMPONENT =================
 export default function Home() {
 
   // ================= INQUIRY =================
@@ -23,24 +21,6 @@ export default function Home() {
   // ================= SAVED LEADS =================
   const [savedLeads, setSavedLeads] = useState([]);
 
-  // ================= LOAD LEADS FROM DATABASE =================
-  useEffect(() => {
-    fetchLeads();
-  }, []);
-
-  const fetchLeads = async () => {
-    const { data, error } = await supabase
-      .from("leads")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Error fetching leads:", error);
-    } else {
-      setSavedLeads(data);
-    }
-  };
-
   // ================= SEND MESSAGE =================
   const sendMessage = async () => {
     if (!message) return;
@@ -49,7 +29,7 @@ export default function Home() {
 
     const res = await fetch("/api/generate", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         type: "receptionist",
         message,
@@ -72,40 +52,36 @@ export default function Home() {
 
   // ================= FOLLOW UP =================
   const generateFollowUp = async () => {
-    if (!followMessage) return;
+  if (!followMessage) return;
 
-    const res = await fetch("/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: "followup",
-        message: followMessage,
-        repName: followRep,
-        customerName: followCustomer
-      }),
-    });
+  const res = await fetch("/api/generate", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      type: "followup",
+      message: followMessage,
+      repName: followRep,
+      customerName: followCustomer
+    }),
+  });
 
-    const data = await res.json();
+  const data = await res.json();
 
-    setFollowResponse(data.reply);
+  setFollowResponse(data.reply);
 
-    // 🔥 SAVE TO DATABASE
-    const { error } = await supabase.from("leads").insert([
-      {
-        name: followCustomer,
-        message: followMessage,
-        response: data.reply
-      }
-    ]);
-
-    if (error) {
-      console.error("Error saving lead:", error);
-    } else {
-      fetchLeads(); // refresh list
+  // 🔥 ADD THIS PART
+  const { data: insertData, error } = await supabase.from("leads").insert([
+    {
+      name: followCustomer,
+      message: followMessage,
+      response: data.reply
     }
+  ]);
 
-    setFollowMessage("");
-  };
+  console.log("INSERT RESULT:", insertData, error);
+
+  setFollowMessage("");
+};
 
   return (
     <div style={container}>
@@ -114,7 +90,7 @@ export default function Home() {
 
       <div style={grid}>
 
-        {/* ================= CUSTOMER INQUIRY ================= */}
+        {/* ================= INQUIRY ================= */}
         <div style={card}>
           <h2>Customer Inquiry</h2>
 
@@ -154,7 +130,6 @@ export default function Home() {
 
           <input placeholder="Rep Name" value={followRep} onChange={(e)=>setFollowRep(e.target.value)} style={input}/>
           <input placeholder="Lead Name" value={followCustomer} onChange={(e)=>setFollowCustomer(e.target.value)} style={input}/>
-
           <textarea placeholder="Last interaction..." value={followMessage} onChange={(e)=>setFollowMessage(e.target.value)} style={textarea}/>
 
           <button onClick={generateFollowUp} style={button}>Generate Follow-Up</button>
@@ -170,16 +145,12 @@ export default function Home() {
       <div style={card}>
         <h2>Saved Leads</h2>
 
-        {savedLeads.length === 0 ? (
-          <p>No leads yet</p>
-        ) : (
-          savedLeads.map((lead, i) => (
-            <div key={i} style={leadCard}>
-              <strong>{lead.name}</strong>
-              <p>{lead.response}</p>
-            </div>
-          ))
-        )}
+        {savedLeads.map((lead, i) => (
+          <div key={i} style={leadCard}>
+            <strong>{lead.name}</strong>
+            <p>{lead.response}</p>
+          </div>
+        ))}
       </div>
 
     </div>
