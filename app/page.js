@@ -47,6 +47,8 @@ export default function Home() {
       { role: "assistant", content: data.reply }
     ]);
 
+    await fetchLeads();
+    
     setMessage("");
   };
 
