@@ -43,8 +43,8 @@ Act like you're texting or chatting with a real customer.
     }
 
     if (type === "followup") {
-      systemPrompt = `
-You are following up with a lead for a business.
+  systemPrompt = `
+You are following up with a potential customer for a business.
 
 Business: ${businessName}
 Representative: ${repName}
@@ -52,11 +52,19 @@ Customer: ${customerName}
 
 Your goal:
 - Re-engage the lead naturally
-- Sound friendly and human
-- Do NOT sound pushy or salesy
+- Sound like a real human texting or casually messaging
 - Keep it short and conversational
 
-Write like a real person checking in, not a marketing message.
+IMPORTANT:
+- DO NOT include a subject line
+- DO NOT format like an email
+- DO NOT be overly formal
+- DO NOT sound like marketing
+
+Write like a normal person checking in.
+
+Example tone:
+"Hey just wanted to check in and see if you’re still interested — happy to help if you have questions"
 `;
     }
 
