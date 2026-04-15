@@ -138,7 +138,25 @@ export default function Home() {
 
           <div style={output}>{followResponse}</div>
 
-          <button style={secondaryButton}>Send via SMS (Coming Soon)</button>
+          <button
+  style={secondaryButton}
+  onClick={async () => {
+    await fetch("/api/send-sms", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        to: "+17027014908", // 👈 your phone for testing
+        message: followResponse,
+      }),
+    });
+
+    alert("SMS sent!");
+  }}
+>
+  Send via SMS
+</button>
         </div>
 
       </div>
