@@ -138,21 +138,27 @@ export default function Home() {
 
           <div style={output}>{followResponse}</div>
 
-          <button
+<button
   style={secondaryButton}
   onClick={async () => {
-    await fetch("/api/send-sms", {
+    console.log("BUTTON CLICKED");
+
+    const res = await fetch("/api/send-sms", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        to: "+17027014908", // nom 
-        message: followResponse,
+        to: "+1YOURPERSONALNUMBER",
+        message: followResponse || "Test SMS from AI App",
       }),
     });
 
-    alert("SMS sent!");
+    const data = await res.json();
+
+    console.log("SMS RESPONSE:", data);
+
+    alert("SMS request sent");
   }}
 >
   Send via SMS

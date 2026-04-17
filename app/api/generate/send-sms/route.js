@@ -2,7 +2,12 @@ import twilio from "twilio";
 
 export async function POST(req) {
   try {
+    console.log("SMS ROUTE HIT");
+
     const { to, message } = await req.json();
+
+    console.log("TO:", to);
+    console.log("MESSAGE:", message);
 
     const client = twilio(
       process.env.TWILIO_ACCOUNT_SID,
@@ -15,15 +20,19 @@ export async function POST(req) {
       to: to,
     });
 
-    return new Response(JSON.stringify({ success: true, response }), {
-      status: 200,
-    });
+    console.log("TWILIO SUCCESS:", response.sid);
+
+    return new Response(
+      JSON.stringify({ success: true }),
+      { status: 200 }
+    );
 
   } catch (error) {
     console.error("SMS ERROR:", error);
 
-    return new Response(JSON.stringify({ error: "SMS failed" }), {
-      status: 500,
-    });
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { status: 500 }
+    );
   }
 }
