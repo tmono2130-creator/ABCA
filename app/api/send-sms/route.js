@@ -6,24 +6,31 @@ export async function POST(req) {
 
     const { to, message } = await req.json();
 
-    console.log("TO:", to);
-    console.log("MESSAGE:", message);
+    if (!to || !message) {
+      return new Response(
+        JSON.stringify({ error: "Missing phone number or message" }),
+        { status: 400 }
+      );
+    }
 
     const client = twilio(
       process.env.TWILIO_ACCOUNT_SID,
       process.env.TWILIO_AUTH_TOKEN
     );
 
-    const response = await client.messages.create({
+    const sms = await client.messages.create({
       body: message,
       from: process.env.TWILIO_PHONE_NUMBER,
       to: to,
     });
 
-    console.log("TWILIO SUCCESS:", response.sid);
+    console.log("SMS SENT:", sms.sid);
 
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({
+        success: true,
+        sid: sms.sid
+      }),
       { status: 200 }
     );
 
@@ -31,7 +38,10 @@ export async function POST(req) {
     console.error("SMS ERROR:", error);
 
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({
+        success: false,
+        error: error.message
+      }),
       { status: 500 }
     );
   }

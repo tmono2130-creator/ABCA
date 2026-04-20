@@ -149,7 +149,7 @@ export default function Home() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        to: "+1YOURPERSONALNUMBER",
+        to: "+17027014908",
         message: followResponse || "Test SMS from AI App",
       }),
     });
