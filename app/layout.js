@@ -2,15 +2,13 @@ import "./globals.css";
 
 export const metadata = {
   title: "AI Business Communication Assistant",
-  description: "Automated customer communication platform",
+  description: "ABCA",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

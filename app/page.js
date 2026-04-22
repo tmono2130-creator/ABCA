@@ -68,7 +68,7 @@ export default function Home() {
 
     await supabase.from("leads").insert([
       {
-        name: "Lead",
+        name: "New Lead",
         message: followMessage,
         response: data.reply,
         status: "New",
@@ -80,44 +80,57 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-purple-50 flex">
 
-      {/* NAVBAR */}
-      <div className="bg-purple-700 text-white px-8 py-5 shadow-md">
-        <h1 className="text-2xl font-bold">
-          AI Business Communication Assistant
+      {/* Sidebar */}
+      <div className="w-64 bg-purple-700 text-white p-6">
+        <h1 className="text-3xl font-bold mb-10">
+          ABCA
         </h1>
-        <p className="text-sm text-purple-200 mt-1">
-          Automate inquiries • Follow up faster • Close more leads
-        </p>
+
+        <div className="space-y-5 text-lg">
+          <p className="hover:text-purple-200 cursor-pointer">
+            Dashboard
+          </p>
+          <p className="hover:text-purple-200 cursor-pointer">
+            Leads
+          </p>
+          <p className="hover:text-purple-200 cursor-pointer">
+            Messages
+          </p>
+          <p className="hover:text-purple-200 cursor-pointer">
+            Analytics
+          </p>
+        </div>
       </div>
 
-      <div className="p-8">
+      {/* Main Content */}
+      <div className="flex-1 p-8">
 
-        {/* METRICS */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-800">
+            AI Business Communication Assistant
+          </h1>
 
-          <div className="bg-white rounded-xl shadow p-6">
-            <h2 className="text-gray-500 text-sm">Total Leads</h2>
-            <p className="text-3xl font-bold text-purple-600">
+          <p className="text-gray-500 mt-2">
+            Automate communication. Capture more leads.
+          </p>
+        </div>
+
+        {/* KPI Cards */}
+        <div className="grid grid-cols-3 gap-6 mb-8">
+
+          <div className="bg-white rounded-2xl shadow p-6">
+            <h2 className="text-gray-500">Total Leads</h2>
+            <p className="text-4xl font-bold text-purple-600">
               {savedLeads.length}
             </p>
           </div>
 
-          <div className="bg-white rounded-xl shadow p-6">
-            <h2 className="text-gray-500 text-sm">New Leads</h2>
-            <p className="text-3xl font-bold text-blue-600">
-              {
-                savedLeads.filter(
-                  (lead) => lead.status === "New"
-                ).length
-              }
-            </p>
-          </div>
-
-          <div className="bg-white rounded-xl shadow p-6">
-            <h2 className="text-gray-500 text-sm">Booked</h2>
-            <p className="text-3xl font-bold text-green-600">
+          <div className="bg-white rounded-2xl shadow p-6">
+            <h2 className="text-gray-500">Booked</h2>
+            <p className="text-4xl font-bold text-green-600">
               {
                 savedLeads.filter(
                   (lead) => lead.status === "Booked"
@@ -126,18 +139,29 @@ export default function Home() {
             </p>
           </div>
 
+          <div className="bg-white rounded-2xl shadow p-6">
+            <h2 className="text-gray-500">New Leads</h2>
+            <p className="text-4xl font-bold text-blue-600">
+              {
+                savedLeads.filter(
+                  (lead) => lead.status === "New"
+                ).length
+              }
+            </p>
+          </div>
+
         </div>
 
-        {/* MAIN PANELS */}
-        <div className="grid md:grid-cols-2 gap-8">
+        {/* Main Panels */}
+        <div className="grid grid-cols-2 gap-6">
 
-          {/* CUSTOMER INQUIRY */}
-          <div className="bg-white rounded-xl shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">
+          {/* Customer Inquiry */}
+          <div className="bg-white rounded-2xl shadow p-6">
+            <h2 className="text-xl font-bold mb-4">
               Customer Inquiry
             </h2>
 
-            <div className="h-72 overflow-y-auto bg-gray-50 rounded-lg p-4 mb-4">
+            <div className="h-72 overflow-y-auto bg-gray-50 rounded-xl p-4 mb-4">
               {chat.map((msg, i) => (
                 <div
                   key={i}
@@ -148,10 +172,10 @@ export default function Home() {
                   }`}
                 >
                   <div
-                    className={`px-4 py-2 rounded-lg max-w-xs ${
+                    className={`px-4 py-2 rounded-xl max-w-xs ${
                       msg.role === "user"
                         ? "bg-purple-600 text-white"
-                        : "bg-gray-200"
+                        : "bg-gray-200 text-black"
                     }`}
                   >
                     {msg.content}
@@ -161,28 +185,30 @@ export default function Home() {
             </div>
 
             <textarea
-              className="w-full border rounded-lg p-3 mb-4"
+              className="w-full border rounded-xl p-3 mb-4"
               placeholder="Type customer inquiry..."
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={(e) =>
+                setMessage(e.target.value)
+              }
             />
 
             <button
               onClick={sendMessage}
-              className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700"
+              className="bg-purple-600 text-white px-6 py-3 rounded-xl"
             >
               Send Message
             </button>
           </div>
 
-          {/* FOLLOW UP */}
-          <div className="bg-white rounded-xl shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">
+          {/* Follow Up */}
+          <div className="bg-white rounded-2xl shadow p-6">
+            <h2 className="text-xl font-bold mb-4">
               Lead Follow-Up
             </h2>
 
             <textarea
-              className="w-full border rounded-lg p-3 mb-4"
+              className="w-full border rounded-xl p-3 mb-4"
               placeholder="Enter previous lead conversation..."
               value={followMessage}
               onChange={(e) =>
@@ -192,38 +218,34 @@ export default function Home() {
 
             <button
               onClick={generateFollowUp}
-              className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700"
+              className="bg-green-600 text-white px-6 py-3 rounded-xl"
             >
               Generate Follow-Up
             </button>
 
-            <div className="mt-6 bg-gray-50 rounded-lg p-4 min-h-[120px]">
-              {followResponse || "Generated response appears here"}
+            <div className="mt-6 bg-gray-50 rounded-xl p-4">
+              {followResponse || "Generated follow-up appears here"}
             </div>
           </div>
         </div>
 
-        {/* LEAD DASHBOARD */}
-        <div className="bg-white rounded-xl shadow p-6 mt-8">
-          <h2 className="text-xl font-semibold mb-6">
+        {/* Lead Dashboard */}
+        <div className="bg-white rounded-2xl shadow p-6 mt-8">
+          <h2 className="text-xl font-bold mb-4">
             Lead Dashboard
           </h2>
 
-          {savedLeads.length === 0 ? (
-            <p className="text-gray-500">
-              No leads yet
-            </p>
-          ) : (
-            savedLeads.map((lead) => (
+          <div className="space-y-4">
+            {savedLeads.map((lead) => (
               <div
                 key={lead.id}
-                className="flex justify-between items-center border-b py-4"
+                className="flex justify-between items-center border-b pb-3"
               >
                 <div>
                   <h3 className="font-semibold">
                     {lead.name}
                   </h3>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-gray-500 text-sm">
                     {lead.response}
                   </p>
                 </div>
@@ -232,8 +254,8 @@ export default function Home() {
                   {lead.status}
                 </span>
               </div>
-            ))
-          )}
+            ))}
+          </div>
         </div>
 
       </div>
