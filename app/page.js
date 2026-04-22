@@ -1,268 +1,242 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
-import { useState } from "react";
 
 export default function Home() {
-
-  // ================= INQUIRY =================
-  const [inquiryName, setInquiryName] = useState("");
-  const [inquiryBusiness, setInquiryBusiness] = useState("");
-  const [inquiryServices, setInquiryServices] = useState("");
-  const [message, setMessage] = useState("");
+  const [savedLeads, setSavedLeads] = useState([]);
   const [chat, setChat] = useState([]);
-
-  // ================= FOLLOW UP =================
-  const [followRep, setFollowRep] = useState("");
-  const [followCustomer, setFollowCustomer] = useState("");
+  const [message, setMessage] = useState("");
   const [followMessage, setFollowMessage] = useState("");
   const [followResponse, setFollowResponse] = useState("");
 
-  // ================= SAVED LEADS =================
-  const [savedLeads, setSavedLeads] = useState([]);
+  useEffect(() => {
+    fetchLeads();
+  }, []);
 
-  // ================= SEND MESSAGE =================
+  const fetchLeads = async () => {
+    const { data } = await supabase
+      .from("leads")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    setSavedLeads(data || []);
+  };
+
   const sendMessage = async () => {
     if (!message) return;
 
-    const newHistory = [...chat, { role: "user", content: message }];
-
     const res = await fetch("/api/generate", {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         type: "receptionist",
         message,
-        history: chat,
-        businessName: inquiryBusiness,
-        services: inquiryServices,
-        customerName: inquiryName
       }),
     });
 
     const data = await res.json();
 
     setChat([
-      ...newHistory,
-      { role: "assistant", content: data.reply }
+      ...chat,
+      { role: "user", content: message },
+      { role: "assistant", content: data.reply },
     ]);
 
-    await fetchLeads();
-    
     setMessage("");
   };
 
-  // ================= FOLLOW UP =================
   const generateFollowUp = async () => {
-  if (!followMessage) return;
+    if (!followMessage) return;
 
-  const res = await fetch("/api/generate", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({
-      type: "followup",
-      message: followMessage,
-      repName: followRep,
-      customerName: followCustomer
-    }),
-  });
-
-  const data = await res.json();
-
-  setFollowResponse(data.reply);
-
-  // 🔥 ADD THIS PART
-  const { data: insertData, error } = await supabase.from("leads").insert([
-    {
-      name: followCustomer,
-      message: followMessage,
-      response: data.reply
-    }
-  ]);
-
-  console.log("INSERT RESULT:", insertData, error);
-
-  setFollowMessage("");
-};
-
-  return (
-    <div style={container}>
-
-      <h1 style={title}>AI Business Communication Assistant</h1>
-
-      <div style={grid}>
-
-        {/* ================= INQUIRY ================= */}
-        <div style={card}>
-          <h2>Customer Inquiry</h2>
-
-          <input placeholder="Customer Name" value={inquiryName} onChange={(e)=>setInquiryName(e.target.value)} style={input}/>
-          <input placeholder="Business Name" value={inquiryBusiness} onChange={(e)=>setInquiryBusiness(e.target.value)} style={input}/>
-          <input placeholder="Services" value={inquiryServices} onChange={(e)=>setInquiryServices(e.target.value)} style={input}/>
-
-          <div style={chatBox}>
-            {chat.map((msg, i) => (
-              <div key={i} style={{
-                display: "flex",
-                justifyContent: msg.role === "user" ? "flex-end" : "flex-start"
-              }}>
-                <div style={{
-                  background: msg.role === "user" ? "#6366f1" : "#e2e8f0",
-                  color: msg.role === "user" ? "white" : "black",
-                  padding: "10px",
-                  borderRadius: "12px",
-                  margin: "5px",
-                  maxWidth: "70%"
-                }}>
-                  {msg.content}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <textarea placeholder="Type message..." value={message} onChange={(e)=>setMessage(e.target.value)} style={textarea}/>
-
-          <button onClick={sendMessage} style={button}>Send</button>
-          <button onClick={()=>setChat([])} style={secondaryButton}>Clear Chat</button>
-        </div>
-
-        {/* ================= FOLLOW UP ================= */}
-        <div style={card}>
-          <h2>Lead Follow-Up</h2>
-
-          <input placeholder="Rep Name" value={followRep} onChange={(e)=>setFollowRep(e.target.value)} style={input}/>
-          <input placeholder="Lead Name" value={followCustomer} onChange={(e)=>setFollowCustomer(e.target.value)} style={input}/>
-          <textarea placeholder="Last interaction..." value={followMessage} onChange={(e)=>setFollowMessage(e.target.value)} style={textarea}/>
-
-          <button onClick={generateFollowUp} style={button}>Generate Follow-Up</button>
-
-          <div style={output}>{followResponse}</div>
-
-<button
-  style={secondaryButton}
-  onClick={async () => {
-    console.log("BUTTON CLICKED");
-
-    const res = await fetch("/api/send-sms", {
+    const res = await fetch("/api/generate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        to: "+17027014908",
-        message: followResponse || "Test SMS from AI App",
+        type: "followup",
+        message: followMessage,
       }),
     });
 
     const data = await res.json();
 
-    console.log("SMS RESPONSE:", data);
+    setFollowResponse(data.reply);
 
-    alert("SMS request sent");
-  }}
->
-  Send via SMS
-</button>
+    await supabase.from("leads").insert([
+      {
+        name: "Lead",
+        message: followMessage,
+        response: data.reply,
+        status: "New",
+      },
+    ]);
+
+    fetchLeads();
+    setFollowMessage("");
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-100">
+
+      {/* NAVBAR */}
+      <div className="bg-purple-700 text-white px-8 py-5 shadow-md">
+        <h1 className="text-2xl font-bold">
+          AI Business Communication Assistant
+        </h1>
+        <p className="text-sm text-purple-200 mt-1">
+          Automate inquiries • Follow up faster • Close more leads
+        </p>
+      </div>
+
+      <div className="p-8">
+
+        {/* METRICS */}
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+
+          <div className="bg-white rounded-xl shadow p-6">
+            <h2 className="text-gray-500 text-sm">Total Leads</h2>
+            <p className="text-3xl font-bold text-purple-600">
+              {savedLeads.length}
+            </p>
+          </div>
+
+          <div className="bg-white rounded-xl shadow p-6">
+            <h2 className="text-gray-500 text-sm">New Leads</h2>
+            <p className="text-3xl font-bold text-blue-600">
+              {
+                savedLeads.filter(
+                  (lead) => lead.status === "New"
+                ).length
+              }
+            </p>
+          </div>
+
+          <div className="bg-white rounded-xl shadow p-6">
+            <h2 className="text-gray-500 text-sm">Booked</h2>
+            <p className="text-3xl font-bold text-green-600">
+              {
+                savedLeads.filter(
+                  (lead) => lead.status === "Booked"
+                ).length
+              }
+            </p>
+          </div>
+
+        </div>
+
+        {/* MAIN PANELS */}
+        <div className="grid md:grid-cols-2 gap-8">
+
+          {/* CUSTOMER INQUIRY */}
+          <div className="bg-white rounded-xl shadow p-6">
+            <h2 className="text-xl font-semibold mb-4">
+              Customer Inquiry
+            </h2>
+
+            <div className="h-72 overflow-y-auto bg-gray-50 rounded-lg p-4 mb-4">
+              {chat.map((msg, i) => (
+                <div
+                  key={i}
+                  className={`mb-3 flex ${
+                    msg.role === "user"
+                      ? "justify-end"
+                      : "justify-start"
+                  }`}
+                >
+                  <div
+                    className={`px-4 py-2 rounded-lg max-w-xs ${
+                      msg.role === "user"
+                        ? "bg-purple-600 text-white"
+                        : "bg-gray-200"
+                    }`}
+                  >
+                    {msg.content}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <textarea
+              className="w-full border rounded-lg p-3 mb-4"
+              placeholder="Type customer inquiry..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+            />
+
+            <button
+              onClick={sendMessage}
+              className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700"
+            >
+              Send Message
+            </button>
+          </div>
+
+          {/* FOLLOW UP */}
+          <div className="bg-white rounded-xl shadow p-6">
+            <h2 className="text-xl font-semibold mb-4">
+              Lead Follow-Up
+            </h2>
+
+            <textarea
+              className="w-full border rounded-lg p-3 mb-4"
+              placeholder="Enter previous lead conversation..."
+              value={followMessage}
+              onChange={(e) =>
+                setFollowMessage(e.target.value)
+              }
+            />
+
+            <button
+              onClick={generateFollowUp}
+              className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700"
+            >
+              Generate Follow-Up
+            </button>
+
+            <div className="mt-6 bg-gray-50 rounded-lg p-4 min-h-[120px]">
+              {followResponse || "Generated response appears here"}
+            </div>
+          </div>
+        </div>
+
+        {/* LEAD DASHBOARD */}
+        <div className="bg-white rounded-xl shadow p-6 mt-8">
+          <h2 className="text-xl font-semibold mb-6">
+            Lead Dashboard
+          </h2>
+
+          {savedLeads.length === 0 ? (
+            <p className="text-gray-500">
+              No leads yet
+            </p>
+          ) : (
+            savedLeads.map((lead) => (
+              <div
+                key={lead.id}
+                className="flex justify-between items-center border-b py-4"
+              >
+                <div>
+                  <h3 className="font-semibold">
+                    {lead.name}
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    {lead.response}
+                  </p>
+                </div>
+
+                <span className="bg-purple-100 text-purple-700 px-4 py-1 rounded-full text-sm">
+                  {lead.status}
+                </span>
+              </div>
+            ))
+          )}
         </div>
 
       </div>
-
-      {/* ================= SAVED LEADS ================= */}
-      <div style={card}>
-        <h2>Saved Leads</h2>
-
-        {savedLeads.map((lead, i) => (
-          <div key={i} style={leadCard}>
-            <strong>{lead.name}</strong>
-            <p>{lead.response}</p>
-          </div>
-        ))}
-      </div>
-
     </div>
   );
 }
-
-// ================= STYLES =================
-
-const container = {
-  background: "#0f172a",
-  minHeight: "100vh",
-  padding: "30px",
-  color: "white",
-  fontFamily: "Arial"
-};
-
-const grid = {
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr",
-  gap: "20px"
-};
-
-const card = {
-  background: "white",
-  color: "#1e293b",
-  padding: "20px",
-  borderRadius: "12px",
-  marginBottom: "20px"
-};
-
-const input = {
-  width: "100%",
-  marginTop: "10px",
-  padding: "10px",
-  borderRadius: "8px",
-  border: "1px solid #ddd"
-};
-
-const textarea = {
-  width: "100%",
-  marginTop: "10px",
-  padding: "10px",
-  borderRadius: "8px",
-  minHeight: "80px"
-};
-
-const button = {
-  marginTop: "10px",
-  padding: "10px",
-  background: "#6366f1",
-  color: "white",
-  border: "none",
-  borderRadius: "8px"
-};
-
-const secondaryButton = {
-  marginTop: "10px",
-  padding: "10px",
-  background: "#e2e8f0",
-  border: "none",
-  borderRadius: "8px"
-};
-
-const chatBox = {
-  background: "#f1f5f9",
-  height: "200px",
-  overflowY: "auto",
-  marginTop: "10px",
-  padding: "10px",
-  borderRadius: "8px"
-};
-
-const output = {
-  marginTop: "10px",
-  padding: "10px",
-  background: "#f1f5f9",
-  borderRadius: "8px"
-};
-
-const leadCard = {
-  marginTop: "10px",
-  padding: "10px",
-  background: "#f8fafc",
-  borderRadius: "8px"
-};
-
-const title = {
-  marginBottom: "20px"
-};
